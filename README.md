@@ -1,6 +1,6 @@
 # codestat-web
 
-> A full-featured C-based and AI-enhanced codebase analysis tool with optional Python integration and JSON reporting.
+> A full-featured C-based and AI-enhanced codebase analysis tool with JSON reporting.
 
 ---
 
