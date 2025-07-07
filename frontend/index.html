@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>codestat Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #38bdf8;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #0ea5e9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      border: none;
+      background: #334155;
+      color: #f1f5f9;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #38bdf8;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      color: #7dd3fc;
+      margin-top: 0;
+    }
+
+    #output {
+      background: #1e293b;
+      color: #d1d5db;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 800px;
+      white-space: pre-wrap;
+      font-family: 'Fira Code', monospace;
+      overflow-x: auto;
+    }
+
+    .section {
+      max-width: 800px;
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #1e293b;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #7dd3fc;
+      cursor: pointer;
+      font-size: 1.1em;
+      text-decoration: underline;
+      margin-bottom: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .credits {
+      font-size: 0.9em;
+      margin-top: 50px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <h1>codestat Analyzer</h1>
+
+  <button class="toggle-btn" onclick="toggleSection()">▼ About codestat</button>
+  <div id="infoSection" class="section hidden">
+    <p><strong>codestat</strong> is a lightweight AI-powered static code analysis tool built by a Software engineering student at McMaster University who goes by the name of <strong> Rayan Radi</strong>.</p>
+    <p>Upload your zipped C codebase, and it’ll generate a report showing:</p>
+    <ul>
+      <li>📏 Lines of Code</li>
+      <li>🧠 Function Complexity</li>
+      <li>💬 Blast Radius if said file were to be deleted</li>
+    </ul>
+    <p>Complexity is estimated using logic and machine learning (via HuggingFace Ai), making this tool uniquely intelligent.</p>
+  </div>
+
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".zip" required />
+    <button type="submit">Analyze</button>
+  </form>
+
+  <h2>Report Output</h2>
+  <pre id="output">No report yet.</pre>
+
+  <div class="section">
+    <h2>🚧 Coming Soon</h2>
+    <p>I'm working on support for:</p>
+    <ul>
+      <li>🟨 Java file analysis</li>
+      <li>🐍 Python file analysis</li>
+    </ul>
+    <p>Stay tuned!</p>
+  </div>
+
+  <p class="credits">© 2025 Rayan Radi – All Rights Reserved.</p>
+
+  <script>
+    function toggleSection() {
+      const section = document.getElementById("infoSection");
+      section.classList.toggle("hidden");
+    }
+
+    const form = document.getElementById('uploadForm');
+    const output = document.getElementById('output');
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      output.textContent = "Analyzing...";
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/analyze', {
+          method: 'POST',
+          body: formData
+        });
+        const json = await response.json();
+
+        if (!json.success) {
+          output.textContent = "❌ Error: " + json.error;
+          return;
+        }
+
+        const parsed = JSON.parse(json.report);
+        output.textContent = JSON.stringify(parsed, null, 2);
+      } catch (err) {
+        output.textContent = "❌ Failed to connect to backend: " + err;
+      }
+    };
+  </script>
+</body>
+</html>
