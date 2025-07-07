@@ -1,0 +1,98 @@
+[
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/storage.h",
+    "total_lines": 39,
+    "code_lines": 18,
+    "blank_lines": 21,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/quiz_logic.h",
+    "total_lines": 7,
+    "code_lines": 5,
+    "blank_lines": 2,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/storage.c",
+    "total_lines": 132,
+    "code_lines": 120,
+    "blank_lines": 12,
+    "functions": 5,
+    "blast_radius": "MEDIUM",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/storage.c:Zone.Identifier",
+    "total_lines": 0,
+    "code_lines": 0,
+    "blank_lines": 0,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/storage.h:Zone.Identifier",
+    "total_lines": 0,
+    "code_lines": 0,
+    "blank_lines": 0,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/main.c",
+    "total_lines": 179,
+    "code_lines": 164,
+    "blank_lines": 15,
+    "functions": 3,
+    "blast_radius": "MEDIUM",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/main.c:Zone.Identifier",
+    "total_lines": 0,
+    "code_lines": 0,
+    "blank_lines": 0,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/quiz_logic.c:Zone.Identifier",
+    "total_lines": 0,
+    "code_lines": 0,
+    "blank_lines": 0,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/quiz_logic.c",
+    "total_lines": 169,
+    "code_lines": 146,
+    "blank_lines": 23,
+    "functions": 4,
+    "blast_radius": "MEDIUM",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "file": "Test-Subject//the-team-assignment-team-5-coconut/quiz_logic.h:Zone.Identifier",
+    "total_lines": 0,
+    "code_lines": 0,
+    "blank_lines": 0,
+    "functions": 0,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(1)"
+  },
+  {
+    "summary": {
+      "total_loc": 943755552,
+      "files_scanned": 175841312
+    }
+  }
+]
