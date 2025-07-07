@@ -1,41 +1,40 @@
 # codestat-web
 
-> A full-featured C-based and AI-enhanced codebase analysis tool with JSON reporting.
+> A full-stack, AI-assisted codebase analysis tool featuring a command-line engine, C/Python backend, and web-based frontend interface.
 
 ---
 
 ## Overview
 
-**codestat-web** is a powerful, extensible, multi-language code analysis utility designed to scan and report critical metrics from codebases, especially in **C** and **Java**. The tool walks through directories, identifies and analyzes relevant files, computes various code metrics, and generates structured output in JSON format suitable for dashboards, automation, or further AI processing.
+**codestat-web** is a powerful and extensible full-stack utility for analyzing source code across directories. It features:
 
-This utility is ideal for developers, software architects, and CI/CD pipelines where understanding the quality, structure, and maintainability of a codebase is essential.
+- A C-based command-line analysis engine (`codestat-runall`)
+- A Python (Flask) backend for routing, control, and AI integration
+- A web-based frontend for interactive use
+
+The system recursively scans C, header, and Java source files, calculates structural metrics, estimates time complexity using AI, and displays results in both machine-readable JSON and a visual HTML dashboard.
 
 ---
 
 ## Features
 
-- 📂 **Recursive File Scanning**  
-  Automatically locates all `.c`, `.h`, and `.java` files within a given directory structure.
+### CLI Engine (`codestat-runall`)
+- Recursive file scanning (`.c`, `.h`, `.java`)
+- Line-of-code (LOC) statistics
+- Function counting
+- Worst-case time complexity estimation
+- Blast radius labeling
+- JSON report generation
 
-- 📊 **Metrics Analysis per File**  
-  For each file, codestat calculates:
-  - Total lines of code
-  - Number of code lines vs. blank lines
-  - Number of functions
-  - **Blast radius** estimation (how risky it is to delete or change the file)
-  - **Worst-case time complexity**, powered by optional AI logic
+### Web Backend (Python Flask)
+- Exposes analysis endpoints via REST API
+- Integrates AI via `ai_complexity.py`
+- Launches analysis and serves output to frontend
 
-- 🧠 **AI Integration (Optional)**  
-  Uses a Python script (`ai_complexity.py`) to analyze the content of each function and estimate time complexity intelligently.
-
-- 🧾 **Structured JSON Output**  
-  All results are output to `report.json` in JSON array format, including a summary section.
-
-- 🔍 **Interactive CLI Mode (Optional)**  
-  Includes a command loop (can be re-enabled) for querying individual files interactively using commands like `scanfile <filename>`.
-
-- ⚙️ **Modular Design**  
-  All analysis logic is separated across modules like `loc.c`, `complexity.c`, `function_count.c`, and `analyzer.c`, making it easy to extend.
+### Web Frontend (HTML/JS)
+- Clean GUI to trigger analysis
+- View results visually from JSON reports
+- User input and feedback support
 
 ---
 
@@ -43,71 +42,84 @@ This utility is ideal for developers, software architects, and CI/CD pipelines w
 
 ```
 codestat-web/
-├── codestat-runall/         # Core source code folder
+├── codestat-runall/         # C-based command-line engine
 │   ├── src/
-│   │   ├── main.c
-│   │   ├── scanner.c/h
+│   │   ├── main.c, scanner.c/h
 │   │   └── analyzer/
-│   │       ├── analyzer.c/h
-│   │       ├── loc.c/h
-│   │       ├── complexity.c/h
-│   │       ├── function_count.c/h
-│   │       └── comment_todo.c/h
+│   │       ├── analyzer.c/h, loc.c/h, complexity.c/h, etc.
 │   ├── Makefile
-│   └── report.json          # Auto-generated analysis output
-├── ai_complexity.py         # Optional AI Python script for complexity analysis
-└── venv/                    # Optional Python virtual environment
+│   └── report.json
+├── backend/                 # Python Flask backend
+│   ├── app.py
+│   └── ai_complexity.py     # AI function analysis
+├── frontend/                # HTML/JS frontend
+│   └── index.html, style.css, script.js (etc.)
+├── venv/                    # Optional Python virtual environment
+└── README.md
 ```
 
 ---
 
-## Getting Started
+## Installation & Setup
 
-### Prerequisites
-
-- GCC (for compiling the C code)
-- Python 3.10+ (if using AI analysis)
-- Git (for version control)
-
-### Installation
-
-Clone the repo:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/RayanRadi/codestat-web.git
-cd codestat-web/codestat-runall
+cd codestat-web
 ```
 
-Build the tool:
+### 2. Build the CLI engine
 
 ```bash
+cd codestat-runall
 make
+cd ..
 ```
 
-(Optional) Set up the Python environment:
+### 3. Set up the backend
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install flask
 ```
 
 ---
 
 ## Usage
 
-### Run analysis on a directory
+### Command-Line Analysis (CLI)
+
+Run the CLI engine on a code directory:
 
 ```bash
 ./codestat-runall Test-Subject/
 ```
 
-This will:
+This generates a `report.json` file with metrics for all scanned files.
 
-- Recursively scan all valid files in the `Test-Subject/` directory
-- Generate `report.json` in the same folder
+### Web Interface
 
-### Sample JSON Output
+Start the backend server:
+
+```bash
+cd backend
+source ../venv/bin/activate
+python app.py
+```
+
+Then open the web app:
+
+```
+http://localhost:5000/
+```
+
+Use the frontend GUI to trigger scans and view results visually.
+
+---
+
+## Sample JSON Output
 
 ```json
 [
@@ -131,64 +143,31 @@ This will:
 
 ---
 
-## Understanding the Metrics
+## Metrics Explained
 
-- **Lines of Code (LOC)**: Total vs. code vs. blank lines.
-- **Functions**: Number of functions defined in the file.
-- **Blast Radius**: An estimate of the potential impact if this file were modified or deleted.
-  - *Low*: < 5 functions
-  - *Medium*: 5–9 functions
-  - *High*: 10+ functions
-- **Worst Complexity**: Either statically estimated or returned by the `ai_complexity.py` script by analyzing function structure.
-
----
-
-## AI Complexity (Optional)
-
-To use the AI-powered time complexity estimator:
-1. Ensure `ai_complexity.py` is located at the path hardcoded in `complexity.c`
-2. Modify the path in `call_ai_on_function()` if necessary:
-```c
-/usr/bin/python3 /full/path/to/ai_complexity.py temp_func.txt
-```
-3. The script must return a single line like `O(n)` or `O(n^2)` for each function body.
+- **Lines of Code (LOC)**: Total, code, and blank lines.
+- **Functions**: Counted using basic parsing.
+- **Blast Radius**: Categorized as:
+  - Low: <5 functions
+  - Medium: 5–9 functions
+  - High: 10+ functions
+- **Worst Complexity**: Based on loop analysis or external AI via `ai_complexity.py`.
 
 ---
 
-## Tagging Releases
 
-To tag a stable version:
+## Roadmap (Future Improvements)
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
----
-
-## Development Roadmap
-
-Potential future additions:
-- Language support beyond C/Java (Python, JS, etc.)
-- JSON schema validation
-- CI integration (GitHub Actions, etc.)
-- Dockerized build for portable analysis
+- Language support: Python, JavaScript, more
+- Real-time frontend refresh on analysis
+- Graphical metrics dashboard
+- Docker support
+- GitHub CI workflow
 
 ---
 
-## Contributing
-
-This project is currently maintained individually. If you'd like to contribute, feel free to fork, make changes, and submit a pull request with a clear description of the improvements or bug fixes.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
 
 ## Author
 
 **Rayan Radi**  
-[https://github.com/RayanRadi](https://github.com/RayanRadi)
+https://github.com/RayanRadi
