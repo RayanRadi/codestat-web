@@ -15,7 +15,7 @@ def analyze():
     zip_path = "upload.zip"
     zip_file.save(zip_path)
 
-    # Unzip
+    # Unzip to temp_code/
     extract_folder = "temp_code"
     subprocess.run(["rm", "-rf", extract_folder])
     os.makedirs(extract_folder)
@@ -24,7 +24,7 @@ def analyze():
         zip_ref.extractall(extract_folder)
 
     # Run codestat
-    binary_path = "/usr/local/bin/codestat-runall"
+    binary_path = "src/codestat-runall"
     full_command = f'"{binary_path}" "{extract_folder}"'
     subprocess.run(full_command, shell=True)
 
@@ -41,12 +41,12 @@ def analyze():
                     glob.glob(f"{extract_folder}/**/*.h", recursive=True):
         try:
             ai_output = subprocess.check_output(
-                ["python3", "ai_complexity.py", code_file],
+                ["python3", "backend/ai_complexity.py", code_file],
                 stderr=subprocess.STDOUT,
                 timeout=60
             ).decode().strip()
             ai_results[code_file] = ai_output
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             ai_results[code_file] = "AI_ERROR"
         except subprocess.TimeoutExpired:
             ai_results[code_file] = "AI_TIMEOUT"
@@ -57,5 +57,7 @@ def analyze():
         "ai_complexities": ai_results
     })
 
+# ✅ REQUIRED FOR RENDER — binds to correct host/port
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
