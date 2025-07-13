@@ -4,38 +4,40 @@ import os
 import zipfile
 import subprocess
 import glob
+import shutil
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    # Save zip
+    # Save uploaded zip file
     zip_file = request.files['file']
     zip_path = "upload.zip"
     zip_file.save(zip_path)
 
-    # Unzip to temp_code/
+    # Extract to temp_code/, removing old contents
     extract_folder = "temp_code"
-    subprocess.run(["rm", "-rf", extract_folder])
+    if os.path.exists(extract_folder):
+        shutil.rmtree(extract_folder)
     os.makedirs(extract_folder)
 
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_folder)
 
-    # Run codestat
-    binary_path = "src/codestat-runall"
+    # Run codestat-runall on uploaded code
+    binary_path = "src/codestat-runall"  # Adjust path if needed
     full_command = f'"{binary_path}" "{extract_folder}"'
     subprocess.run(full_command, shell=True)
 
-    # Load codestat report
+    # Read codestat report
     try:
         with open("report.json", "r") as f:
             report_content = f.read()
     except FileNotFoundError:
         return jsonify({"success": False, "error": "report.json not found."})
 
-    # Run AI on each .c/.h file
+    # Optional: run AI complexity on each file
     ai_results = {}
     for code_file in glob.glob(f"{extract_folder}/**/*.c", recursive=True) + \
                     glob.glob(f"{extract_folder}/**/*.h", recursive=True):
@@ -57,7 +59,9 @@ def analyze():
         "ai_complexities": ai_results
     })
 
-# ✅ REQUIRED FOR RENDER — binds to correct host/port
+# ✅ Needed for deployment
+from waitress import serve
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    serve(app, host="0.0.0.0", port=port)
