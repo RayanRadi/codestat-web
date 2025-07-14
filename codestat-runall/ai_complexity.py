@@ -6,10 +6,8 @@ import threading
 import time
 import signal
 
-# Handle broken pipe errors silently (final boss patch)
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
-# Spinner class with error-safe printing
 class Spinner:
     def __init__(self, message="Analyzing with AI... "):
         self.message = message
@@ -20,10 +18,10 @@ class Spinner:
         spin_chars = "|/-\\"
         i = 0
         try:
-            print(self.message, end="", flush=True)
+            print(self.message, end="", flush=True, file=sys.stderr)
             while not self.stop_flag:
                 try:
-                    print(spin_chars[i % len(spin_chars)], end="\r", flush=True)
+                    print(spin_chars[i % len(spin_chars)], end="\r", flush=True, file=sys.stderr)
                     time.sleep(0.1)
                     i += 1
                 except BrokenPipeError:
@@ -38,19 +36,18 @@ class Spinner:
         self.stop_flag = True
         self.thread.join()
         try:
-            print(" " * (len(self.message) + 2), end="\r")
+            print(" " * (len(self.message) + 2), end="\r", file=sys.stderr)
         except BrokenPipeError:
             pass
-
 
 def read_func(path):
     with open(path, 'r') as f:
         return f.read()
 
 def ask_ai(function_code):
-    token = os.getenv("HF_TOKEN")
+    token = os.getenv("OPENROUTER_API_KEY")
     if not token:
-        print("Error: HF_TOKEN environment variable not set.")
+        print("Error: OPENROUTER_API_KEY environment variable not set.", file=sys.stderr)
         return "AI_ERROR"
 
     headers = {
@@ -58,15 +55,20 @@ def ask_ai(function_code):
         "Content-Type": "application/json"
     }
 
+    # Your locked-in prompt
     prompt = (
-        "This is a C code file. Analyze all functions and return the single worst-case time complexity "
-        "among them. Respond with only the Big-O notation, like: 'O(1)', 'O(n)', 'O(n^2)', 'O(n log n)', or 'O(2^n)'.\n\n"
-        f"{function_code}\n\n"
-        "Only return the worst-case Big-O. No explanation."
+        "What is the worst-case time complexity of this C code? "
+        "Only return the Big-O notation (like O(1), O(n), O(n^2), etc), no explanation, no sentence "
+        "I only expect to see big-o notation:\n\n"
+        f"{function_code}"
     )
 
     data = {
-        "inputs": prompt
+        "model": "mistralai/mistral-7b-instruct",
+        "messages": [
+            {"role": "system", "content": "You are a code analysis expert."},
+            {"role": "user", "content": prompt}
+        ]
     }
 
     spinner = Spinner()
@@ -74,36 +76,35 @@ def ask_ai(function_code):
 
     try:
         response = requests.post(
-            "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta",
+            "https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             json=data,
             timeout=60
         )
         spinner.stop()
         response.raise_for_status()
-        raw = response.json()[0]["generated_text"]
-        matches = re.findall(r"O\([^)]+\)", raw)
+
+        content = response.json()["choices"][0]["message"]["content"]
+        matches = re.findall(r"O\([^)]+\)", content)
         if matches:
-            clean = matches[-1].strip()
-            if not re.match(r"O\(\s*(1|n|n\^2|n log n|2\^n)\s*\)", clean):
-                return "O(n)"
-            return clean
+            return matches[-1].strip()
         else:
             return "AI_ERROR"
+
     except requests.exceptions.Timeout:
         spinner.stop()
-        print("Error: Hugging Face API timed out.")
+        print("Error: OpenRouter API timed out.", file=sys.stderr)
         return "AI_TIMEOUT"
     except Exception as e:
         spinner.stop()
-        print(f"Error calling Hugging Face API: {e}")
+        print(f"Error calling OpenRouter API: {e}", file=sys.stderr)
         return "AI_ERROR"
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: ai_complexity.py <function_file>")
+        print("Usage: ai_complexity.py <function_file>", file=sys.stderr)
         sys.exit(1)
 
     func_code = read_func(sys.argv[1])
     result = ask_ai(func_code)
-    print(result)
+    print(result)  # Only stdout line — captured by C

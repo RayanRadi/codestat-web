@@ -18,10 +18,10 @@ class Spinner:
         spin_chars = "|/-\\"
         i = 0
         try:
-            print(self.message, end="", flush=True)
+            print(self.message, end="", flush=True, file=sys.stderr)
             while not self.stop_flag:
                 try:
-                    print(spin_chars[i % len(spin_chars)], end="\r", flush=True)
+                    print(spin_chars[i % len(spin_chars)], end="\r", flush=True, file=sys.stderr)
                     time.sleep(0.1)
                     i += 1
                 except BrokenPipeError:
@@ -36,7 +36,7 @@ class Spinner:
         self.stop_flag = True
         self.thread.join()
         try:
-            print(" " * (len(self.message) + 2), end="\r")
+            print(" " * (len(self.message) + 2), end="\r", file=sys.stderr)
         except BrokenPipeError:
             pass
 
@@ -47,7 +47,7 @@ def read_func(path):
 def ask_ai(function_code):
     token = os.getenv("OPENROUTER_API_KEY")
     if not token:
-        print("Error: OPENROUTER_API_KEY environment variable not set.")
+        print("Error: OPENROUTER_API_KEY environment variable not set.", file=sys.stderr)
         return "AI_ERROR"
 
     headers = {
@@ -55,11 +55,12 @@ def ask_ai(function_code):
         "Content-Type": "application/json"
     }
 
+    # Your locked-in prompt
     prompt = (
-        "You are an expert C programmer. Analyze this C code and return the single worst-case time complexity "
-        "in Big-O notation only. Respond only with: O(1), O(n), O(n^2), O(n log n), O(2^n), etc.\n\n"
-        f"{function_code}\n\n"
-        "Only return the worst-case Big-O. No explanation."
+        "What is the worst-case time complexity of this C code? "
+        "Only return the Big-O notation (like O(1), O(n), O(n^2), etc), no explanation, no sentence "
+        "I only expect to see big-o notation:\n\n"
+        f"{function_code}"
     )
 
     data = {
@@ -92,18 +93,18 @@ def ask_ai(function_code):
 
     except requests.exceptions.Timeout:
         spinner.stop()
-        print("Error: OpenRouter API timed out.")
+        print("Error: OpenRouter API timed out.", file=sys.stderr)
         return "AI_TIMEOUT"
     except Exception as e:
         spinner.stop()
-        print(f"Error calling OpenRouter API: {e}")
+        print(f"Error calling OpenRouter API: {e}", file=sys.stderr)
         return "AI_ERROR"
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: ai_complexity.py <function_file>")
+        print("Usage: ai_complexity.py <function_file>", file=sys.stderr)
         sys.exit(1)
 
     func_code = read_func(sys.argv[1])
     result = ask_ai(func_code)
-    print(result)
+    print(result)  # Only stdout line — captured by C

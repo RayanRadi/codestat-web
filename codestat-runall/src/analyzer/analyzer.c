@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>  // for INT_MAX
 #include "analyzer.h"
 #include "loc.h"
 #include "complexity.h"
@@ -11,6 +12,13 @@ static FILE *json_out = NULL;
 
 void analyze_file(const char *filepath, AnalysisResult *result) {
     LOCResult loc = count_loc(filepath);
+
+    // Sanity check on LOC result
+    if (loc.total_lines < 0 || loc.total_lines > 100000) {
+        fprintf(stderr, "Warning: LOC count for %s is invalid. Skipping file.\n", filepath);
+        return;
+    }
+
     result->total_lines = loc.total_lines;
     result->code_lines = loc.code_lines;
     result->blank_lines = loc.blank_lines;
@@ -21,6 +29,10 @@ void analyze_file(const char *filepath, AnalysisResult *result) {
 
     if (!json_out) {
         json_out = fopen("report.json", "w");
+        if (!json_out) {
+            perror("Failed to open report.json");
+            return;
+        }
         fprintf(json_out, "[\n");
     }
 
@@ -41,7 +53,12 @@ void analyze_file(const char *filepath, AnalysisResult *result) {
         function_count, blast, worst
     );
 
-    total_loc += loc.total_lines;
+    if (total_loc <= INT_MAX - loc.total_lines) {
+        total_loc += loc.total_lines;
+    } else {
+        fprintf(stderr, "Warning: total_loc overflow detected. Skipping LOC addition for %s\n", filepath);
+    }
+
     files_scanned++;
 }
 
@@ -53,9 +70,12 @@ void print_total_loc_to_json(const char *summary_path) {
             "      \"total_loc\": %d,\n"
             "      \"files_scanned\": %d\n"
             "    }\n"
-            "  }\n");
+            "  }\n",
+            total_loc, files_scanned
+        );
         fprintf(json_out, "]\n");
         fclose(json_out);
         json_out = NULL;
     }
 }
+
