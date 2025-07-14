@@ -6,10 +6,8 @@ import threading
 import time
 import signal
 
-# Handle broken pipe errors silently (final boss patch)
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
-# Spinner class with error-safe printing
 class Spinner:
     def __init__(self, message="Analyzing with AI... "):
         self.message = message
@@ -42,15 +40,14 @@ class Spinner:
         except BrokenPipeError:
             pass
 
-
 def read_func(path):
     with open(path, 'r') as f:
         return f.read()
 
 def ask_ai(function_code):
-    token = os.getenv("HF_TOKEN")
+    token = os.getenv("OPENROUTER_API_KEY")
     if not token:
-        print("Error: HF_TOKEN environment variable not set.")
+        print("Error: OPENROUTER_API_KEY environment variable not set.")
         return "AI_ERROR"
 
     headers = {
@@ -59,14 +56,18 @@ def ask_ai(function_code):
     }
 
     prompt = (
-        "This is a C code file. Analyze all functions and return the single worst-case time complexity "
-        "among them. Respond with only the Big-O notation, like: 'O(1)', 'O(n)', 'O(n^2)', 'O(n log n)', or 'O(2^n)'.\n\n"
+        "You are an expert C programmer. Analyze this C code and return the single worst-case time complexity "
+        "in Big-O notation only. Respond only with: O(1), O(n), O(n^2), O(n log n), O(2^n), etc.\n\n"
         f"{function_code}\n\n"
         "Only return the worst-case Big-O. No explanation."
     )
 
     data = {
-        "inputs": prompt
+        "model": "mistralai/mistral-7b-instruct",
+        "messages": [
+            {"role": "system", "content": "You are a code analysis expert."},
+            {"role": "user", "content": prompt}
+        ]
     }
 
     spinner = Spinner()
@@ -74,29 +75,28 @@ def ask_ai(function_code):
 
     try:
         response = requests.post(
-            "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta",
+            "https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             json=data,
             timeout=60
         )
         spinner.stop()
         response.raise_for_status()
-        raw = response.json()[0]["generated_text"]
-        matches = re.findall(r"O\([^)]+\)", raw)
+
+        content = response.json()["choices"][0]["message"]["content"]
+        matches = re.findall(r"O\([^)]+\)", content)
         if matches:
-            clean = matches[-1].strip()
-            if not re.match(r"O\(\s*(1|n|n\^2|n log n|2\^n)\s*\)", clean):
-                return "O(n)"
-            return clean
+            return matches[-1].strip()
         else:
             return "AI_ERROR"
+
     except requests.exceptions.Timeout:
         spinner.stop()
-        print("Error: Hugging Face API timed out.")
+        print("Error: OpenRouter API timed out.")
         return "AI_TIMEOUT"
     except Exception as e:
         spinner.stop()
-        print(f"Error calling Hugging Face API: {e}")
+        print(f"Error calling OpenRouter API: {e}")
         return "AI_ERROR"
 
 if __name__ == "__main__":
