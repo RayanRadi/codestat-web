@@ -1,6 +1,6 @@
 [
   {
-    "file": "Test-Subject//quadratic.c",
+    "file": "Test-Subject//quadratic4.c",
     "total_lines": 20,
     "code_lines": 17,
     "blank_lines": 3,
@@ -9,22 +9,22 @@
     "worst_complexity": "O(n^2)"
   },
   {
-    "file": "Test-Subject//linear2.c",
-    "total_lines": 16,
-    "code_lines": 13,
-    "blank_lines": 3,
-    "functions": 2,
-    "blast_radius": "LOW",
-    "worst_complexity": "O(n)"
-  },
-  {
-    "file": "Test-Subject//logarithmic.c",
+    "file": "Test-Subject//logarithmic4.c",
     "total_lines": 20,
     "code_lines": 17,
     "blank_lines": 3,
     "functions": 2,
     "blast_radius": "LOW",
     "worst_complexity": "O(log n)"
+  },
+  {
+    "file": "Test-Subject//Linear46.c",
+    "total_lines": 16,
+    "code_lines": 13,
+    "blank_lines": 3,
+    "functions": 2,
+    "blast_radius": "LOW",
+    "worst_complexity": "O(n)"
   },
   {
     "summary": {
